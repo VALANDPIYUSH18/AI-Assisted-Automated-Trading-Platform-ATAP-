@@ -1,0 +1,770 @@
+Created 0 todos
+
+Perfect! I'm proceeding with my recommended scope. Creating the **complete PRD now** with focus on **fast MVP delivery + local server hosting**. ⚡---
+
+# PRD: AI-Assisted Automated Trading Platform (ATAP)
+
+## 1. Product overview
+
+### 1.1 Document title and version
+
+- PRD: AI-Assisted Automated Trading Platform (ATAP)
+- Version: 1.0
+- Date: 2026-05-18
+
+### 1.2 Product summary
+
+**ATAP** is a web-based trading automation platform that enables retail day traders in India to automate their trading strategies with AI-guided recommendations and professional-grade risk management. Unlike existing platforms (Streak, Zerodha), ATAP works with multiple brokers, automatically backtests strategies with detailed metrics, and provides AI recommendations for optimal trading parameters.
+
+The platform allows traders to:
+- Define trading strategies using a no-code interface (EMA, RSI, Breakout patterns)
+- Backtest strategies on historical data with professional metrics (Sharpe ratio, drawdown, win rate)
+- Deploy strategies to live trading with automated order execution
+- Receive AI recommendations on which strategies perform best
+- Monitor live positions in real-time with automated risk management
+- Access a marketplace to share/copy successful strategies
+
+**Target market:** 500K-1M active day traders in India who currently use single-broker platforms like Streak or manual trading.
+
+**Business model:** Freemium subscription ($0/month free tier, ₹99-299/month paid tiers, 20% revenue share on strategy marketplace).
+
+**Deployment:** Docker-based, self-hosted on local/cloud servers with PostgreSQL, Redis, Python FastAPI backend, and Next.js frontend.
+
+---
+
+## 2. Goals
+
+### 2.1 Business goals
+
+- Acquire 500+ active users by Month 6 (MVP + Phase 2)
+- Achieve ₹15K MRR (monthly recurring revenue) by Month 6
+- Establish 30%+ trial-to-paid conversion rate
+- Build network effects through strategy marketplace (100+ shared strategies by Month 6)
+- Enable 100K+ trades/month executed by Month 6
+- Achieve NPS > 50 (Net Promoter Score) by Month 6
+
+### 2.2 User goals
+
+- Automate routine trades without manual monitoring
+- Evaluate trading strategies with professional metrics before risking money
+- Diversify across multiple brokers without switching platforms
+- Remove emotional trading decisions
+- Monitor open positions in real-time with automated alerts
+- Earn passive income by sharing successful strategies
+
+### 2.3 Non-goals
+
+- Direct broker API integration (Phase 2 only, MVP uses MT5)
+- Copy trading with automated fund transfer (Phase 3)
+- Options/futures trading (equity stocks only)
+- Mobile app (Phase 2, web-responsive in MVP)
+- Crypto trading (regulatory uncertainty)
+- Advanced ML/AI (Phase 2+, MVP uses rule-based strategies)
+- Multi-account portfolio management (single broker account per user in MVP)
+
+---
+
+## 3. User personas
+
+### 3.1 Key user types
+
+- **Retail Day Trader** (Primary, 70%): Active trader using one broker, wants to automate
+- **Part-Time Trader** (Secondary, 20%): Trades evenings/weekends, needs passive income angle
+- **Trading Enthusiast** (Tertiary, 10%): Learning to trade, wants backtesting & education
+- **Strategy Creator** (Future, Marketplace): Expert traders monetizing successful strategies
+
+### 3.2 Basic persona details
+
+- **Raj** (Retail Day Trader): 28 years old, day trades 3-5 hours daily with Angel One, uses ₹50K-₹1L capital, wants to automate entry/exit signals, frustrated with manual execution errors and missing opportunities. Willing to pay ₹99-299/month for reliable automation.
+
+- **Priya** (Part-Time Trader): 32 years old, trades 1-2 hours evenings after work with Zerodha, wants to earn passive income from her trading strategies, interested in sharing strategies for revenue share (20%).
+
+- **Amit** (Trading Enthusiast): 22 years old, learning technical analysis, backtests strategies manually in Excel, wants professional backtesting tools and trading education, prefers free tier initially.
+
+### 3.3 Role-based access
+
+- **Free User**: Create 1 strategy, run 1 backtest/day, paper trading only, read-only strategy marketplace
+- **Pro User** (₹99/month): Create 10 strategies, unlimited backtests, live trading up to ₹1L positions, strategy marketplace read/write
+- **Enterprise User** (₹999/month): Unlimited strategies, API access, white-label capability, dedicated support
+
+---
+
+## 4. Functional requirements
+
+### 4.1 Authentication & user management (Priority: CRITICAL)
+
+- User registration with email verification
+- JWT-based authentication with 15-minute access token + 7-day refresh token
+- Two-factor authentication (2FA) for account security
+- Password reset via email
+- User profile management (name, email, trading style preference)
+- Subscription tier management (free → pro → enterprise)
+- API key generation for power users (Pro tier only)
+
+### 4.2 Broker account connection (Priority: CRITICAL)
+
+- Connect Angel One Smart API with encrypted credentials storage
+- Connect Zerodha Kite API with encrypted credentials storage
+- Secure OAuth/API key management (never logged in plaintext)
+- Account info display (portfolio value, available cash, margin)
+- Multi-broker support (same user can connect 2+ brokers)
+- Disconnect broker without data loss
+
+### 4.3 Strategy management (Priority: CRITICAL)
+
+- Create strategies with no-code UI (drag-drop conditions)
+- Define strategy parameters: entry/exit rules, timeframe (1min to daily)
+- Support 3 initial strategy types:
+  - **EMA Crossover**: Buy when EMA5 crosses above EMA20, sell on crossover down
+  - **RSI Momentum**: Buy when RSI < 30 (oversold), sell when RSI > 70
+  - **Breakout**: Buy when price breaks above 52-week high, sell on pullback
+- Clone existing strategies for iteration
+- Edit strategy parameters (safe: no running trades affected)
+- Pause/resume strategies (stop new signals, keep open trades)
+- Delete strategies (only if no active trades)
+- Export strategy as JSON for sharing
+
+### 4.4 Backtesting engine (Priority: CRITICAL)
+
+- Run historical simulation on 1-10 years of data
+- Support multiple timeframes (1min, 5min, 15min, 1hr, daily)
+- Calculate professional metrics:
+  - Win rate (% of profitable trades)
+  - Profit factor (total profit / total loss, target > 1.5)
+  - Sharpe ratio (risk-adjusted return)
+  - Max drawdown (peak-to-trough decline)
+  - Sortino ratio (downside-adjusted return)
+  - Average trade duration
+  - Largest win/loss
+- Generate equity curve visualization (chart)
+- Show trade-by-trade list with entry/exit prices
+- Support different slippage assumptions (0%, 0.5%, 1%)
+- Async job processing (backtest runs in background)
+- Report completion via email + in-app notification
+- Export backtest results as PDF/CSV
+
+### 4.5 Live trading execution (Priority: CRITICAL)
+
+- Deploy strategy to live trading (enable signal generation)
+- Automatic order placement when signals triggered
+- Market orders only (MVP Phase 1)
+- Automatic SL/TP placement (atomic with entry order)
+- Position tracking in real-time
+- Manual position override (close early, modify SL/TP)
+- Order status monitoring (pending, executed, failed)
+- Trade confirmation logging (audit trail)
+- Reconciliation with broker (hourly sync to verify trades match)
+
+### 4.6 Risk management engine (Priority: HIGH)
+
+- Position sizing calculation (fixed size or Kelly criterion)
+- Stop-loss enforcement (required, can't place order without SL)
+- Take-profit enforcement (optional, but recommended)
+- Daily loss limit (pause all strategies if daily loss > limit %)
+- Max open positions (e.g., max 5 stocks at once)
+- Account leverage limit (never allow > 3x leverage)
+- Real-time position P&L calculation
+- Risk alerts (alert when positions near risk limit)
+
+### 4.7 Portfolio analytics (Priority: HIGH)
+
+- Dashboard overview (total value, today's P&L, monthly P&L)
+- Per-strategy performance (win rate, Sharpe, monthly P&L)
+- Sector allocation breakdown (% by sector)
+- Individual trade history with filters (date, symbol, strategy)
+- Performance comparison (backtest vs live results)
+- Equity curve chart (portfolio value over time)
+- Export analytics as PDF/CSV
+
+### 4.8 Notifications & alerts (Priority: MEDIUM)
+
+- Real-time trade execution alerts (email + in-app + push)
+- SL/TP hit alerts
+- Risk threshold breach alerts (daily loss limit reached)
+- Backtest completion notification
+- In-app notification center with history
+- Email digest (daily/weekly summary of trades)
+- Push notifications (optional, requires browser permission)
+
+### 4.9 Strategy marketplace (Priority: MEDIUM, Phase 2)
+
+- Share strategies publicly (opt-in)
+- Strategy discovery page (browse community strategies)
+- Strategy performance leaderboard (ranked by win rate, Sharpe)
+- Revenue share (20% to creator, 80% to platform)
+- Rating/review system (traders rate shared strategies)
+- Strategy metadata (description, timeframe, risk profile)
+
+### 4.10 Data management (Priority: HIGH)
+
+- Historical OHLC data for 500+ NSE/BSE stocks
+- Daily data refresh at 4:30 PM IST (after market close)
+- Intraday data update every 5 minutes during market hours
+- Support multiple timeframes (1min, 5min, 15min, 1hr, daily)
+- Data quality validation (check for missing/outlier data)
+- Data retention: 10 years minimum
+
+### 4.11 Admin & monitoring (Priority: MEDIUM)
+
+- Admin dashboard (user count, trades executed, system health)
+- Error logging and monitoring (Sentry integration)
+- Performance metrics (API latency, database queries)
+- User management (view users, suspend accounts, refund)
+- Revenue tracking (MRR, conversion rate, churn)
+
+---
+
+## 5. User experience
+
+### 5.1 Entry points & first-time user flow
+
+- **Landing page**: Product overview, features, pricing tiers, CTA ("Start Free")
+- **Registration**: Email-based sign-up, no credit card required for free tier
+- **Onboarding**: 2-minute walkthrough (strategy creation, backtesting, deployment)
+- **Broker connection**: Guided modal with Angel One or Zerodha setup steps
+- **First strategy**: Template-based creation (select strategy type, fill parameters)
+- **First backtest**: Run backtest, view results with metrics explanation
+- **First trade**: Deploy to paper trading (no real money), view live dashboard
+
+### 5.2 Core experience
+
+- **Strategy Creation**: Simple no-code form, saves instantly, no deployment needed
+  - Ensures traders can experiment quickly without technical barriers
+  
+- **Backtesting**: One-click run, async processing, email notification on completion
+  - Removes waiting friction, lets traders continue working while backtest runs
+  
+- **Live Dashboard**: Real-time position updates every 5 seconds, large P&L display, quick action buttons
+  - Traders see exactly what's happening without confusion or delay
+  
+- **Alerts**: Multi-channel (email, in-app, SMS future) with clear, actionable messages
+  - Traders never miss important events (trade executed, SL hit, risk limit reached)
+  
+- **Analytics**: Visual charts, professional metrics explained, comparison features
+  - Traders understand performance and can improve strategies intelligently
+
+### 5.3 Advanced features & edge cases
+
+- **Strategy versioning**: Save parameter history, compare backtest results across versions
+- **Broker failover**: If primary broker offline, queue orders for retry
+- **Network error handling**: Graceful degradation, sync data when connection restored
+- **Duplicate order prevention**: Idempotency keys prevent accidental re-execution
+- **Manual override**: Trader can close position manually if strategy stuck
+- **Data gaps**: Alert if backtest period has missing data, suggest alternative dates
+- **Slippage simulation**: Model realistic execution prices, not just close prices
+- **Performance under load**: System handles 1000+ concurrent traders, 10K trades/minute
+
+### 5.4 UI/UX highlights
+
+- **Dark theme** (professional trading aesthetic, reduces eye strain)
+- **Real-time updates** via WebSocket (no page refresh needed)
+- **Mobile-responsive** (90% feature parity on mobile)
+- **Keyboard shortcuts** (advanced traders love shortcuts)
+- **Dark charts** (TradingView-style candlestick charts)
+- **One-click actions** (deploy, pause, close, are all single clicks)
+- **Inline explanations** (hover for definitions of Sharpe ratio, drawdown, etc.)
+- **Error messages** (clear, actionable, suggest solutions)
+
+---
+
+## 6. Narrative
+
+**Raj wakes up at 8 AM and opens ATAP on his phone.** His EMA crossover strategy executed 2 trades overnight, with a ₹2,500 profit. He checks the live dashboard: both positions are open, near their take-profit levels. He sets a notification alert if either hits TP, then gets ready for work.
+
+**During work, ATAP sends a push notification:** "INFY position hit take-profit ₹5,200. Closed. Profit: ₹2,100." He opens the app, sees the trade in his history, and smiles.
+
+**After work, Raj backtests a new RSI strategy** to test an idea he had. The backtest completes in 2 minutes: 42% win rate, 1.8 profit factor, but a worrying 8% max drawdown. He tweaks parameters (higher entry threshold), backtests again: 45% win rate, 2.1 profit factor, 5% drawdown. Better. He deploys it live with ₹5K position size.
+
+**ATAP manages the risk:** If his daily loss exceeds ₹10K, it automatically pauses this new strategy to protect his account.
+
+**At month-end, Raj checks Analytics.** His three strategies are ranked by Sharpe ratio. His best strategy (EMA crossover on RELIANCE) returned 12% this month with 52% win rate. He considers sharing it on the ATAP marketplace for 20% of subscription fees from users who follow it.
+
+**Raj is happy.** He trades less emotionally, his win rate is up, and he's saving hours daily in manual trade management.
+
+---
+
+## 7. Success metrics
+
+### 7.1 User-centric metrics
+
+- **Activation rate**: 60%+ of registered users connect a broker within 7 days
+- **Backtest engagement**: 80%+ of active users run ≥3 backtests/week
+- **Strategy deployment**: 50%+ of users deploy ≥1 strategy to live trading
+- **Trade frequency**: Average 10+ trades/user/month (from automated execution)
+- **Retention**: 70%+ of Pro users retain after Month 1, 50%+ after Month 3
+- **Net Promoter Score (NPS)**: ≥50 (very good)
+- **Feature adoption**: 40%+ use portfolio analytics, 30%+ use strategy marketplace
+
+### 7.2 Business metrics
+
+- **Monthly Active Users (MAU)**: 500+ by Month 6, 2000+ by Month 12
+- **Conversion rate**: 25-30% of free users convert to Pro
+- **MRR (Monthly Recurring Revenue)**: ₹15K by Month 6, ₹100K+ by Month 12
+- **Customer Lifetime Value (LTV)**: ₹5000+ (assuming ₹150/month × 33 months)
+- **CAC (Customer Acquisition Cost)**: ₹200 (< ₹300 acceptable)
+- **LTV/CAC ratio**: ≥10x (healthy)
+- **Churn rate**: <5% monthly (good SaaS retention)
+- **Marketplace revenue**: 20% of MRR by Month 6 (users sharing strategies)
+
+### 7.3 Technical metrics
+
+- **System uptime**: 99.9% (max 43 min downtime/month)
+- **API latency (p95)**: <200ms
+- **Backtest completion time**: <30 seconds (1 year of data)
+- **Order execution latency**: <500ms (from signal to broker)
+- **Trade reconciliation accuracy**: 99.99% (platform matches broker)
+- **Database query time (p95)**: <100ms
+- **Error rate**: <0.5% on API calls
+- **Concurrent users supported**: 1000+ without degradation
+
+---
+
+## 8. Technical considerations
+
+### 8.1 Integration points
+
+- **Angel One Smart API**: OAuth/API key authentication, order placement, position sync, account info
+- **Zerodha Kite API**: API key authentication, order placement, position sync, historical data
+- **MetaTrader5 (MT5)**: Windows VPS running MT5 terminal, Python package communicates via REST API wrapper
+- **Data providers**: NSE/BSE APIs for OHLC data, fallback to Alpha Vantage (rate-limited)
+- **Payment gateway**: Stripe or Razorpay for subscription billing
+- **Email service**: SendGrid for transactional emails (registration, password reset, trade alerts)
+- **Push notifications**: Firebase Cloud Messaging for mobile/web push
+- **Monitoring**: Sentry for error tracking, DataDog for performance monitoring
+
+### 8.2 Data storage & privacy
+
+- **Database**: PostgreSQL with TimescaleDB for time-series data (market data, position snapshots)
+- **Encryption**: AES-256 for broker credentials at rest, TLS 1.3 for transit
+- **Backup strategy**: Daily automated backups to S3, 3-copy redundancy, 3-year retention for trades
+- **Data retention**: Keep user trades forever (immutable audit trail), market data for 10 years
+- **GDPR/Privacy**: User data deletion on request, no third-party data sharing, clear privacy policy
+- **Compliance**: Audit logs for all trades, comply with Indian tax regulations
+
+### 8.3 Scalability & performance
+
+- **API load**: Horizontal scaling with multiple Python FastAPI instances behind load balancer
+- **Database**: Connection pooling (PgBouncer), read replicas for analytics queries
+- **Caching**: Redis cluster for session tokens, strategy data, real-time prices
+- **Async jobs**: Celery for background backtests, data refresh, reconciliation
+- **CDN**: CloudFront for static assets (Next.js build)
+- **Database sharding**: By user_id when > 10K users (future consideration)
+
+### 8.4 Potential challenges
+
+- **Broker API changes**: Each broker changes API frequently, requires versioning and monitoring
+- **MT5 reliability**: Windows VPS can crash, requires monitoring and auto-restart
+- **Backtesting accuracy**: Must ensure historical data is correct, slippage realistic, commissions accounted
+- **Order execution timing**: Network delays and broker queues can affect execution price
+- **Real money risk**: Traders can lose money, requires strong disclaimers and risk management
+- **Regulatory uncertainty**: India crypto regulations changing, trading laws evolving
+- **Competition**: Streak has brand recognition, must differentiate quickly
+- **Data quality**: Historical data gaps for illiquid stocks, requires validation
+
+---
+
+## 9. Milestones & sequencing
+
+### 9.1 Project estimate
+
+- **Size**: Large (8+ weeks)
+- **Time estimate**: 8-10 weeks for MVP + Phase 2 (with 1-2 humans + AI assistance)
+- **Team composition**: 1 founder/architect, 1 QA/integration tester (part-time or full-time from Week 6)
+
+### 9.2 Team size & composition
+
+- **Minimum viable team**: 1 founder (full-time) + AI code generation
+- **Optimal team (faster)**: 1 founder + 1 backend engineer + 1 frontend engineer + 1 QA tester = 4 people
+- **Key skills**: Python/FastAPI, PostgreSQL, Next.js/React, broker API integration, options trading knowledge
+
+### 9.3 Suggested phases
+
+- **Phase 1: Core MVP** (Weeks 1-4, 4 weeks)
+  - User authentication (JWT + 2FA)
+  - Angel One broker connection
+  - EMA Crossover strategy (simple)
+  - Basic backtesting (win rate, profit factor only)
+  - Live trading (market orders + SL/TP)
+  - Simple dashboard (positions, trades, P&L)
+  - Free tier + Pro tier ($99/month)
+  - **Deliverables**: Working MVP with 1 strategy, 1 broker, live trading on demo account
+  - **Success metric**: 100 beta users, 30% connect broker, 10+ trades/user
+
+- **Phase 2: Enhanced Features** (Weeks 5-8, 4 weeks)
+  - Additional strategies (RSI, Breakout)
+  - Zerodha Kite integration
+  - Advanced backtesting metrics (Sharpe, Sortino, drawdown)
+  - Portfolio analytics dashboard
+  - Risk management automation (daily loss limits, position sizing)
+  - Strategy marketplace (share strategies, 20% revenue share)
+  - Email alerts and notifications
+  - **Deliverables**: Multi-broker support, 3 strategies, advanced analytics, marketplace beta
+  - **Success metric**: 500+ users, 25-30% conversion to Pro, ₹15K MRR, 100 strategies on marketplace
+
+---
+
+## 10. User stories
+
+### 10.1 User registration and email verification
+
+- **ID**: ATAP-001
+- **Description**: As a new trader, I want to register with my email and password so that I can create an account and start using the platform.
+- **Acceptance criteria**:
+  - User can enter email, password (min 8 chars, 1 uppercase, 1 number)
+  - Email verification link sent immediately
+  - User confirms email by clicking link (expires in 24h)
+  - Account created in free tier after verification
+  - Welcome email with onboarding guide sent
+  - User redirected to broker connection page after registration
+  - Error: Email already exists → show message, suggest login
+
+### 10.2 User login with JWT authentication
+
+- **ID**: ATAP-002
+- **Description**: As a registered trader, I want to log in with email/password so that I can access my account.
+- **Acceptance criteria**:
+  - User enters email and password
+  - System validates credentials against hashed password in DB
+  - JWT token generated (15-min expiry)
+  - Refresh token generated (7-day expiry, stored as httpOnly cookie)
+  - Redirect to dashboard
+  - "Remember me" checkbox extends refresh token to 30 days
+  - Invalid credentials → show error message, no account enumeration
+  - Account locked after 5 failed attempts (15-min timeout)
+
+### 10.3 Two-factor authentication (2FA) setup
+
+- **ID**: ATAP-003
+- **Description**: As a Pro user, I want to enable 2FA to protect my account from unauthorized access.
+- **Acceptance criteria**:
+  - User navigates to Settings → Security
+  - System generates TOTP secret, shows QR code
+  - User scans QR code with authenticator app (Google Authenticator, Authy)
+  - User enters 6-digit code from authenticator
+  - 2FA enabled, backup codes generated and shown
+  - On next login, prompt for 2FA code
+  - 2FA code invalid 3x → lock for 15 mins
+  - Can disable 2FA with password confirmation
+
+### 10.4 Connect Angel One broker account
+
+- **ID**: ATAP-004
+- **Description**: As a day trader with Angel One account, I want to connect my API credentials so that I can execute trades automatically.
+- **Acceptance criteria**:
+  - User clicks "Connect Broker" button
+  - Modal shows Angel One setup steps
+  - User enters: API Key, Client ID, TOTP secret
+  - System validates credentials by making test API call to Angel One
+  - If valid: Save encrypted credentials, mark account as "connected"
+  - If invalid: Show error message with troubleshooting steps
+  - Display account info: Portfolio value, available cash, margin
+  - User can disconnect anytime (credentials deleted securely)
+  - Broker session remains active across multiple trades
+
+### 10.5 Connect Zerodha Kite broker account
+
+- **ID**: ATAP-005
+- **Description**: As a day trader with Zerodha account, I want to connect Zerodha Kite so I can trade on ATAP.
+- **Acceptance criteria**:
+  - User clicks "Connect Broker" button
+  - Modal shows Zerodha Kite setup (API key, access token)
+  - System validates credentials with Zerodha API
+  - If valid: Save encrypted credentials, show account info
+  - If invalid: Show error with troubleshooting
+  - Can have Angel One + Zerodha connected simultaneously
+  - Can select which broker to use when deploying strategy
+
+### 10.6 Create EMA Crossover strategy
+
+- **ID**: ATAP-006
+- **Description**: As a trader, I want to create an EMA Crossover strategy without coding so I can test it on historical data.
+- **Acceptance criteria**:
+  - User clicks "Create Strategy" → select "EMA Crossover"
+  - Form shows inputs: Strategy name, fast EMA period (default 5), slow EMA period (default 20)
+  - User enters: name, EMA periods, select symbols (min 1, max 5)
+  - System validates: name unique per user, EMA periods > 0
+  - User saves strategy
+  - Strategy saved to DB with status "draft"
+  - User can edit strategy before deploying
+  - User sees summary: "Buy when EMA5 > EMA20, Sell when EMA5 < EMA20"
+  - Strategy can be cloned and edited
+
+### 10.7 Create RSI momentum strategy
+
+- **ID**: ATAP-007
+- **Description**: As a trader, I want to create an RSI strategy to trade oversold/overbought conditions.
+- **Acceptance criteria**:
+  - User clicks "Create Strategy" → select "RSI"
+  - Form shows: Strategy name, RSI period (default 14), oversold threshold (default 30), overbought threshold (default 70)
+  - User enters: name, RSI thresholds, symbols
+  - System validates: thresholds between 0-100, valid RSI period
+  - Strategy saved with entry rule "RSI < oversold" and exit rule "RSI > overbought"
+  - User sees summary of entry/exit conditions
+  - Can edit and re-save
+
+### 10.8 Create breakout strategy
+
+- **ID**: ATAP-008
+- **Description**: As a trader, I want to create a support/resistance breakout strategy.
+- **Acceptance criteria**:
+  - User clicks "Create Strategy" → select "Breakout"
+  - Form shows: Strategy name, lookback period (default 20, for 20-day high/low)
+  - User enters: name, period, symbols
+  - System validates: period > 0
+  - Strategy saved with rules: "Buy on 20-day high breakout, Sell on 20-day low breakdown"
+  - User can view strategy summary
+
+### 10.9 Run backtest on historical data
+
+- **ID**: ATAP-009
+- **Description**: As a trader, I want to backtest my strategy on 1 year of historical data so I can evaluate performance before trading live.
+- **Acceptance criteria**:
+  - User selects a strategy
+  - User clicks "Backtest" button
+  - Modal shows: date range selector (1 month to 10 years, default 1 year), slippage assumption (0%, 0.5%, 1%)
+  - User selects dates and clicks "Run Backtest"
+  - System queues async job (Celery)
+  - User sees "Backtest running..." status with progress
+  - Backtest completes in < 30 seconds
+  - User redirected to results page showing:
+    - **Metrics**: Win rate %, Profit factor, Sharpe ratio, Max drawdown, Sortino ratio, Avg trade duration
+    - **Equity curve**: Line chart showing portfolio value over time
+    - **Trades list**: Table with entry price, exit price, P&L, entry/exit dates
+    - **Download**: PDF/CSV export button
+  - If error (bad data, strategy fails): Show user-friendly error message
+  - Email notification sent when backtest complete
+
+### 10.10 Deploy strategy to live trading
+
+- **ID**: ATAP-010
+- **Description**: As a trader satisfied with backtest results, I want to deploy my strategy to live trading so orders execute automatically.
+- **Acceptance criteria**:
+  - User clicks "Deploy to Live" on strategy page
+  - Modal shows: broker selection, position size (₹), stop-loss %, take-profit %
+  - System validates: position size ≤ account balance, SL/TP valid percentages
+  - User confirms deployment
+  - Strategy status changed to "live"
+  - Dashboard shows strategy as "active"
+  - Real-time signal generation begins
+  - When signal triggered: auto-create order, send notification
+  - User can pause strategy anytime (stops new signals)
+  - Open trades continue until TP/SL hit
+
+### 10.11 View live trading dashboard
+
+- **ID**: ATAP-011
+- **Description**: As a trader with live strategies, I want to view my open positions in real-time so I can monitor P&L.
+- **Acceptance criteria**:
+  - Dashboard shows:
+    - **Summary**: Total portfolio value, today's P&L (absolute + %), monthly P&L
+    - **Open positions**: Table with symbol, qty, entry price, current price, P&L, SL/TP prices
+    - **Active strategies**: List with # trades today, win rate today
+    - **Recent trades**: Last 5 closed trades with P&L
+  - Data updates every 5 seconds via WebSocket (no refresh needed)
+  - User can click position to view details
+  - User can manually close position (button action)
+  - User can modify SL/TP (modal form)
+  - Charts show live equity curve (updated every minute)
+  - Color coding: Green for profit, red for loss
+
+### 10.12 Manually close a position
+
+- **ID**: ATAP-012
+- **Description**: As a trader, I want to manually close a position early if my analysis changes.
+- **Acceptance criteria**:
+  - User views open position in dashboard
+  - User clicks "Close Position" button
+  - Modal shows: position details (entry price, current price, P&L)
+  - User confirms close
+  - System sends market order to broker
+  - Position closed at market price
+  - Notification sent (close confirmed, final P&L)
+  - Position removed from dashboard, added to history
+  - If broker error: retry 3x with exponential backoff, alert user if all fail
+
+### 10.13 Modify position stop-loss and take-profit
+
+- **ID**: ATAP-013
+- **Description**: As a trader, I want to adjust SL/TP prices if my risk assessment changes.
+- **Acceptance criteria**:
+  - User views open position
+  - User clicks "Modify SL/TP"
+  - Modal shows current SL/TP prices
+  - User enters new prices
+  - System validates: SL < entry price < TP
+  - User confirms
+  - System updates SL/TP orders with broker
+  - Notification sent (SL/TP updated)
+  - Dashboard immediately reflects new prices
+  - If broker error: show alert, maintain old SL/TP
+
+### 10.14 View trade history
+
+- **ID**: ATAP-014
+- **Description**: As a trader, I want to view all past trades with details so I can analyze my performance.
+- **Acceptance criteria**:
+  - User navigates to "Trades" page
+  - Table shows: symbol, entry price, entry time, exit price, exit time, profit/loss, P&L %, exit reason (TP/SL/manual)
+  - Filters: date range, symbol, strategy, P&L (profit/loss only)
+  - Export to CSV button
+  - Click trade to view details: full order info, broker order IDs, exact times
+  - Pagination: show 50 trades per page
+
+### 10.15 View portfolio analytics
+
+- **ID**: ATAP-015
+- **Description**: As a trader, I want to see detailed analytics of my trading performance so I can improve.
+- **Acceptance criteria**:
+  - Analytics dashboard shows:
+    - **Performance**: Monthly P&L chart (line graph), YTD return %
+    - **Strategy metrics**: Table with strategy, win rate %, Sharpe ratio, monthly P&L, # trades
+    - **Sector allocation**: Pie chart showing % by sector (IT, Finance, Energy, etc.)
+    - **Trade distribution**: Bar chart showing # trades per symbol
+    - **Equity curve**: Line chart of portfolio value over 3/6/12 months
+  - User can filter by date range, strategy, broker
+  - Export analytics as PDF
+  - Metrics auto-update as new trades execute
+
+### 10.16 Receive trade execution notification
+
+- **ID**: ATAP-016
+- **Description**: As a trader, I want to be notified when my strategy executes a trade so I don't miss important events.
+- **Acceptance criteria**:
+  - When order executed: notification sent within 5 seconds
+  - Notification includes: symbol, entry price, qty, P&L target (TP), risk (SL)
+  - Notification channels: Email + in-app + push (if enabled)
+  - In-app notification persists in bell icon (badge count)
+  - User can mark notifications as read
+  - User can turn notifications on/off per strategy
+
+### 10.17 Receive stop-loss and take-profit alerts
+
+- **ID**: ATAP-017
+- **Description**: As a trader, I want to be alerted when my position hits SL or TP so I know the trade is closed.
+- **Acceptance criteria**:
+  - When SL/TP hit: alert sent immediately
+  - Alert shows: symbol, exit price, P&L amount and %
+  - Notification channels: Email, in-app, push
+  - Alert timestamp matches trade close time
+  - User can review alert in notification history
+
+### 10.18 Set up daily loss limit
+
+- **ID**: ATAP-018
+- **Description**: As a risk-conscious trader, I want to set a daily loss limit so my strategies stop trading if I lose too much.
+- **Acceptance criteria**:
+  - User goes to Settings → Risk Management
+  - User sets daily loss limit (e.g., ₹10K)
+  - System tracks daily P&L in real-time
+  - If daily loss exceeds limit: all strategies paused (no new orders)
+  - Alert sent when limit breached
+  - Strategies resume next trading day (9:15 AM IST for NSE)
+  - Open trades continue until TP/SL hit
+  - User can manually resume strategies earlier
+
+### 10.19 Set max position size
+
+- **ID**: ATAP-019
+- **Description**: As a risk manager, I want to limit position size so no single trade risks too much capital.
+- **Acceptance criteria**:
+  - User goes to Settings → Risk Management
+  - User sets max position size (e.g., ₹50K per trade)
+  - System validates: position size ≤ available cash
+  - Before placing order: check position size ≤ limit
+  - If order would exceed limit: reject with error message
+  - User can temporarily override limit with password confirmation
+
+### 10.20 Share strategy on marketplace
+
+- **ID**: ATAP-020
+- **Description**: As a successful trader, I want to share my profitable strategy on the marketplace so others can use it and I earn revenue share.
+- **Acceptance criteria**:
+  - User selects strategy with > 30% win rate in backtest
+  - Clicks "Share on Marketplace"
+  - Modal shows: strategy details, win rate, Sharpe ratio, description field, risk profile selector
+  - User adds description: "EMA crossover optimized for RELIANCE"
+  - User sets risk profile: Low/Medium/High
+  - User confirms publish
+  - Strategy becomes public (searchable)
+  - Other users can view, rate, and optionally follow
+  - When user follows strategy: 20% of their Pro subscription (₹20/month) goes to creator
+  - Creator gets monthly payouts via bank transfer
+
+### 10.21 Search and discover strategies on marketplace
+
+- **ID**: ATAP-021
+- **Description**: As a trader, I want to discover profitable strategies created by other traders so I can use them.
+- **Acceptance criteria**:
+  - User navigates to "Marketplace" page
+  - Strategies sorted by: popularity, win rate, Sharpe ratio
+  - Search box for symbol/strategy name
+  - Filters: risk profile, timeframe, win rate (min 30%)
+  - Strategy card shows: name, creator, win rate %, Sharpe ratio, # followers, description
+  - Click strategy to view full details: backtest period, equity curve, sample trades
+  - "Follow" button: copy strategy, auto-use when following user publishes updates
+  - Rating system (1-5 stars)
+  - Disclaimer: "Past performance doesn't guarantee future results"
+
+### 10.22 Subscribe to Pro tier
+
+- **ID**: ATAP-022
+- **Description**: As an engaged free user, I want to upgrade to Pro tier so I can create more strategies and trade live.
+- **Acceptance criteria**:
+  - User clicks "Upgrade to Pro" button
+  - Pricing page shows: Free (₹0), Pro (₹99/month), Enterprise (₹999/month)
+  - User selects Pro, clicks "Subscribe"
+  - Stripe/Razorpay payment form opens
+  - User enters card details
+  - On success: subscription created, invoice emailed, Pro features unlocked
+  - Subscription renews automatically every 30 days
+  - User can cancel anytime (refund prorated to end of month)
+  - On failure: clear error, suggest retry or support contact
+
+### 10.23 View subscription and billing
+
+- **ID**: ATAP-023
+- **Description**: As a Pro user, I want to manage my subscription so I can upgrade, downgrade, or cancel.
+- **Acceptance criteria**:
+  - User goes to Settings → Billing
+  - Shows: current plan (Pro), renewal date, next billing amount
+  - "Manage Subscription" button to upgrade/downgrade
+  - Invoice history with download PDF links
+  - Payment method display and edit option
+  - "Cancel Subscription" button (with confirmation)
+  - On cancel: warning about losing Pro features, option to downgrade instead
+
+### 10.24 API key generation for developers
+
+- **ID**: ATAP-024
+- **Description**: As a developer, I want to generate API keys so I can build custom integrations with ATAP.
+- **Acceptance criteria**:
+  - User (Pro tier only) goes to Settings → API Keys
+  - Clicks "Generate API Key"
+  - Key display: `sk_live_abc123xyz...` (show once, hide after)
+  - User can name the key (e.g., "My Trading Bot")
+  - Key scope: read (strategies, trades), write (create trades)
+  - Can revoke key anytime
+  - Revoked keys are immediately invalid
+  - Usage limit: 100 API calls/minute per user
+  - Rate limit error: 429 Too Many Requests
+
+### 10.25 Admin dashboard - view system metrics
+
+- **ID**: ATAP-025
+- **Description**: As a platform admin, I want to monitor system health so I can detect issues early.
+- **Acceptance criteria**:
+  - Admin user (role=admin) can access /admin/dashboard
+  - Dashboard shows:
+    - **Real-time**: # online users, # active trades, API latency (p95), error rate
+    - **Daily**: registered users, new subscriptions, MRR
+    - **System health**: database connections, Redis memory, API response times
+    - **Alerts**: if uptime < 99%, error rate > 1%, latency > 500ms
+  - Charts: user growth, MRR trend, trade volume trend
+  - Access control: only admin role can view
+
+---
+
+## Approval & Next Steps
+
+**This PRD is ready for implementation.** 
+
